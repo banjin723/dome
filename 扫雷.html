@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .wrapper{
+         width: 100%;
+         height: 1000px;
+         position: fixed;
+         top: 0;
+         left: 0;
+         background: #F1F3F4;
+        }
+        .btn{
+            height: 80px;
+            width: 170px;
+            position: absolute;
+            left: 50px;
+            background: #12A7FF;
+            text-align: center;
+            font: 20px/80px '黑体';
+            color: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .box{
+            height: 500px;
+            width: 500px;
+            margin: 100px auto;
+            border-top: 1px solid #b25f27;
+            border-left: 1px solid #b25f27;
+            box-shadow:  5px 5px 5px rgba(0, 0, 0, 0.3);
+            display: none
+
+        }
+        .flagBox{
+            position:absolute;
+            top: 50px;
+            left: 50%;
+            width: 200px;
+            height: 50px;
+            margin-left: -100px;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold; 
+            display: none
+        }
+        .alertBox{
+            display: none;
+            position:absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            background: rgba(0, 0, 0, 0.2);
+
+        }
+        .alertImg{
+            width: 400px;
+            height: 200px;
+            background: #63C3F1;
+            position:absolute;
+            left: 0;
+            top: -300px;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 20px;
+            color: red;
+            font:30px/200px '黑体';
+            font-weight: bold;
+            text-shadow: 2px 1px 0px  #fff;
+        
+        }
+        .close{
+            position: absolute;
+            right:10px;
+            top: -75px;
+            width: 40px;
+            height: 40px;
+            text-shadow: 0px 0px 0px  #fff;
+            color: #000;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .block{
+            width: 49px;
+            height: 49px;
+            border-right: 1px solid #b25f27;
+            border-bottom: 1px solid #b25f27;
+            box-shadow: 0 0 4px #333 inset;
+            background: green;
+            float: left;
+        }
+        .show{
+            background: #000;
+        }
+        .num{
+            background: #ecd0a1;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 49px;
+            text-align: center;
+        }
+        .flag{
+            background: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="btn" id="btn">开始游戏</div>
+        <div class="box" id="box"></div>
+        <div class="flagBox" id="flagBox">
+            当前剩余雷数：<span id="score">10</span>
+        </div>
+        <div class="alertBox" id="alertBox">
+            <div class="alertImg" >
+                <div class="close" id="close">[X]</div>
+                <span id="alertImg"></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        //点击驾驶游戏 --》动态生成100个小格--》100div
+        //leftClick 没有雷 --》显示数字（代表以当前小格为中心周围8个格的雷数）扩散（当前周围8个格没有雷）--》 有雷 game OVer
+        //rightClick 没有标记 --》 进行标记 有标记--》 取消标记 --》 标记是否正确。10个都正确标记，提示成功
+        //已经出现数子 --》 无效果
+        var startBtn = document.getElementById('btn');
+        var box = document.getElementById('box');
+        var flagBox = document.getElementById('flagBox');
+        var alertBox = document.getElementById('alertBox');
+        var alertImg = document.getElementById('alertImg')
+        var closeBtn = document.getElementById('close');
+        var score = document.getElementById('score')
+        var minesBum;
+        var mineOver;
+        var block;
+        var mineMap = [];
+        var startGameBool = true;
+        bindEvent();
+        function bindEvent(){
+            startBtn.onclick = function(){
+                if(startGameBool){
+                    box.style.display = 'block';
+                    flagBox.style.display = 'block';
+                    init();
+                    startGameBool = false;
+                }
+               
+            }
+            box.oncontextmenu = function(){
+                return false;
+            }
+            box.onmousedown = function(e){
+                var event = e.target;
+                if(e.which == 1){
+                    leftClick(event);
+                }else if(e.which == 3){
+                    rightClcik(event);
+                }
+            }
+            closeBtn.onclick = function(){
+                alertBox.style.display = 'none';
+                flagBox.style.display = 'none';
+                box.style.display = 'none'; 
+                box.innerHTML = ''
+                startGameBool = true;
+            }
+        }
+
+        function init(){
+            minesNum = 10;
+            mineOver = 10;
+            score.innerHTML = mineOver;
+            for(var i = 0; i<10 ;i++){
+                for(var j = 0; j < 10 ;j++){
+                    var con = document.createElement('div');
+                    con.classList.add('block');
+                    con.setAttribute('id',i + '-' + j);
+                    box.appendChild(con);
+                    mineMap.push({mine:0});
+                }
+            }
+             block = document.getElementsByClassName('block');
+             while(minesNum){
+                var mineIndex = Math.floor(Math.random()*100);
+                if(mineMap[mineIndex].mine === 0){
+                    mineMap[mineIndex].mine = 1;
+                     block[mineIndex].classList.add('isLei');
+                     minesNum --;
+                }   
+             }
+
+
+        }
+        
+        function leftClick(dom){
+            if(dom.classList.contains('flag')){
+                return;
+            }
+            var isLei = document.getElementsByClassName('isLei');
+            if(dom && dom.classList.contains('isLei')){
+                console.log('gameOver');
+                for(var i = 0; i< isLei.length; i++){
+                    isLei[i].classList.add('show')
+                }
+                setTimeout(function(){
+                    alertBox.style.display = 'block';
+                    alertImg.innerText = "game OVer"
+                },800)
+            }else{
+                var n = 0;
+                var posArr =  dom && dom.getAttribute('id').split('-');
+                var posX = posArr && +posArr[0];
+                var posY = posArr && +posArr[1];
+                dom && dom.classList.add('num');
+                for(var i = posX-1; i <= posX +1; i++){
+                    for(var j=posY-1; j<=posY + 1; j++){
+                        var aroundBox = document.getElementById(i + '-' + j);
+                        if(aroundBox && aroundBox.classList.contains('isLei')){
+                            n++;
+                        }
+                    }
+                }
+                dom && (dom.innerHTML = n);
+                if(n == 0){
+                    for(var i = posX-1; i <= posX +1 ; i++){
+                         for(var j = posY - 1; j<=posY + 1 ; j++){
+                            var nearBox = document.getElementById(i + '-' + j);
+                            if(nearBox && nearBox.length != 0){
+                            if(!nearBox.classList.contains('check')){
+                                nearBox.classList.add('check')
+                                leftClick(nearBox);
+                               }
+                               
+                            }
+                         }
+                      }
+
+            }
+        }
+        }
+        
+        function rightClcik(dom){
+            if(dom.classList.contains('num')){
+                return;
+            }
+            dom.classList.toggle('flag');
+            if(dom.classList.contains('isLei') && dom.classList.contains('flag')){
+                mineOver --;
+            }
+            if(dom.classList.contains('isLei') && !dom.classList.contains('flag')){
+                mineOver ++;
+            }
+            score.innerText = mineOver;
+            if(mineOver == 0){
+                alertBox.style.display = 'block';
+                alertImg.innerText = "Fighting"
+            }
+        }
+   
+    </script>
+</body>
+</html>

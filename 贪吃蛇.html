@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>贪吃蛇</title>
+    <style>
+    *{
+        margin: 0;
+        padding: 0;
+    }  
+
+    .start{
+        /* display: none; */
+        width: 100%;
+        z-index: 999;
+        height: 700px;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .startBtn{
+        background:#272822;
+        color: #fff;
+        font-weight: bold;
+        font-family: '黑体';
+        text-align: center;
+        height: 170px;
+        width: 200px;
+        text-align: center;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        line-height: 170px;
+        cursor: pointer;
+   }
+.wrapper{
+    width: 100%;
+    height: 700px;
+    background: #C0E1CE;
+    position: relative;
+}
+
+.left-side{
+    width: 24%;
+    position:absolute;
+    height: 700px;
+   
+}
+
+#stop{
+    height: 50px;
+    width: 50px;
+    background: #000;
+    text-align: center;
+    line-height: 50px;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 100%;
+    margin-top: 50px;
+    margin-left: 50px;
+    cursor: pointer;
+} 
+
+.main{
+    position: absolute;
+    left: 25%;
+    width: 50%;
+    height: 90%;
+  
+}
+
+.header{
+ width: 100%;
+ height: 80px;
+text-align: center;
+}
+.score{
+    line-height: 80px;
+    color: #000;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.content{
+    position: absolute;
+    width: 79.5%;
+    height: 36.5%;
+    left: 10%;
+    top: 34%;
+    background: #ccc;
+    border: 1px solid #000;
+}
+
+.loser{
+    display: none;
+    position: 100%;
+    
+}
+
+.con{
+    background: #000;
+    height: 300px;
+    width: 400px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+}
+
+.loserScore{
+    display: block;
+    height: 40px;
+    width: 100%;
+    position: absolute;
+    top: 42%;
+    font-weight: bold;
+    font-size: 30px;
+    color: #fff;
+    text-align: center
+}
+
+.close{
+    position: absolute;
+    top: 0%;
+    right: 0;
+    height: 40px;
+    width: 40px;
+    color: #fff;
+    cursor: pointer;
+
+}
+.food{
+    background: red;
+    border-radius: 100%;
+}
+
+.head{
+    background: brown;
+}
+.body{
+    background: #000;
+}
+
+h4{
+    width: 100%;
+    color: #fff;
+    text-align: center;
+    position: absolute;
+    top: 30%;
+}
+    </style>
+</head>
+<body>
+    <!-- 游戏开始 -->
+    <div class="start" id="start">
+        <div class="startBtn" id="startBtn">开始游戏</div>
+    </div>
+    <!-- 活动区域 -->
+    <div class="wrapper">
+        <!-- 暂停键 -->
+        <div class="left-side">
+            <div id="stop" >开始</div>
+        </div>
+        <!-- 活动区域 -->
+        <div class="main">
+            <div class="header">
+                <div class="score">
+                    分数：<span id="score"></span>
+                </div>
+            </div>
+            <!-- 蛇活动区域 -->
+            <div class="content" id="content">
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 游戏结束 -->
+     <div class="loser" id="lose">
+         <div class="con">
+            <div class="close" id="close" >[X]</div>
+            <h4>当前得分:</h4>
+            <div class="loserScore" id="loserScore"></div>
+        </div>
+     </div>
+    <script>
+        //点击开始游戏--》start消失--》游戏开始
+        //随机出现食物，出现三节蛇开始运动
+        //上下左右--》改变方向运动
+        //判断吃到十五--》食物消失，蛇加一
+        //判断游戏结束，弹出框
+        var stop = document.getElementById('stop')
+        var lose = document.getElementById('lose')
+        var scoreBox = document.getElementById('score')
+        var conter = document.getElementById('content')
+        var start = document.getElementById('start')
+        var snakeMove;
+        var close = document.getElementById('close')
+        var loserScore = document.getElementById('loserScore')
+        var startBtn = document.getElementById('startBtn')
+        var speed = 200;
+        var startGameBool = true;
+       var startPaushBool = true;
+        init();
+        function init(){
+            //地图
+            this.mapW = parseInt(getComputedStyle(content).width);
+            this.mapH = parseInt(getComputedStyle(content).height);
+            this.mapDiv = content;
+
+            //食物
+             this.foodW = 10;
+             this.foodH = 10;
+             this.foodX = 0;
+             this.foodY = 0;
+             //蛇
+            this.snakeW = 10;
+            this.snakeH = 10;
+            this.SnakeBody = [[3,1,'head'],[2,1,'body'],[1,1,'body']]
+            
+            //游戏属性
+            this.direct = "right";
+            this.left = false;
+            this.right = false;
+            this.up = true;
+            this.down = true;
+
+            this.score = 0;
+
+               bindEvent();
+        }
+        function startGame(){
+            start.style.display="none";
+            stop.style.display = "block";
+            food();
+            snake();
+            
+          
+        }
+
+        function food(){
+            var food = document.createElement('div');
+            food.style.width = this.foodW + 'px';
+            food.style.height = this.foodH + 'px';
+            food.style.position = "absolute";
+            this.foodX = Math.floor(Math.random() * (this.mapW/ 11))
+            this.foodY = Math.floor(Math.random() * (this.mapH/ 11))
+            food.style.left = this.foodX * 11 + 'px';
+            food.style.top = this.foodY * 11 +"px";
+            this.mapDiv.appendChild(food).setAttribute('class','food');
+
+        }
+        
+        function snake(){
+            for(var i = 0; i < this.SnakeBody.length; i++){
+                var snake = document.createElement('div');
+                snake.style.width = this.snakeW +'px';
+                snake.style.height = this.snakeH + 'px';
+                snake.style.position = "absolute";
+                snake.style.left = this.SnakeBody[i][0] * 11 +'px';
+                snake.style.top = this.SnakeBody[i][1] * 11 +'px';
+                snake.classList.add(this.SnakeBody[i][2]);
+                this.mapDiv.appendChild(snake).classList.add('snake');
+               
+            }
+        }
+
+        function move(){
+            for(var i = this.SnakeBody.length - 1; i>0; i--){
+                this.SnakeBody[i][0] = this.SnakeBody[i - 1][0];
+                this.SnakeBody[i][1] = this.SnakeBody[i - 1][1];
+            }
+
+            switch(this.direct){
+                case 'right':
+                this.SnakeBody[0][0] += 1;
+                break;
+                case 'up':
+                this.SnakeBody[0][1] -= 1;
+                break;
+                case 'left':
+                this.SnakeBody[0][0] -= 1;
+                break;
+                case 'down':
+                this.SnakeBody[0][1] += 1;
+                break;
+                default:
+                break;
+            }
+
+
+
+            removeClass('snake');
+            snake();
+            if(this.SnakeBody[0][0] == this.foodX && this.SnakeBody[0][1] == this.foodY){
+
+                var snakeEndX = this.SnakeBody[this.SnakeBody.length - 1][0]
+                var snakeEndY = this.SnakeBody[this.SnakeBody.length - 1][1]
+               
+                switch(this.direct){
+                case 'right': 
+                this.SnakeBody.push([snakeEndX + 1 ,snakeEndY,'body']);
+                break;
+                case 'up':
+                this.SnakeBody.push([snakeEndX ,snakeEndY - 1,'body']);;
+                break;
+                case 'left':
+                this.SnakeBody.push([snakeEndX - 1 ,snakeEndY,'body']);
+                break;
+                case 'down':
+                this.SnakeBody.push([snakeEndX ,snakeEndY + 1,'body']);
+                break;
+                default:
+                break;
+            }
+
+                this.score += 1
+                scoreBox.innerHTML = this.score;
+                removeClass ('food');
+                food();
+            }
+            
+            if(this.SnakeBody[0][0] < 0 || this.SnakeBody[0][0] >= this.mapW/ 11){
+               relodGame();
+            }
+            if(this.SnakeBody[0][1] < 0 || this.SnakeBody[0][1] >= this.mapH/ 11){
+                relodGame();
+            }
+            var snakeHX =  this.SnakeBody[0][0];
+            var snakeHY = this.SnakeBody[0][1];
+            for(var i=1;i<this.SnakeBody.length; i++){
+                if(snakeHX == SnakeBody[i][0] &&  snakeHY == SnakeBody[i][1]){
+                    relodGame();
+                }
+            }
+        }
+        function relodGame(){
+            removeClass('snake');
+            removeClass('food');
+            clearInterval(snakeMove);
+
+            this.SnakeBody = [[3,1,'head'],[2,1,'body'],[1,1,'body']]
+            
+            //游戏属性
+            this.direct = "right";
+            this.left = false;
+            this.right = false;
+            this.up = true;
+            this.down = true;
+            lose.style.display = "block"
+            loserScore.innerHTML = this.score;
+            this.score = 0;
+            scoreBox.innerHTML = this.score
+             startGameBool = true;
+            startPaushBool = true;
+            stop.innerHTML="开始";
+        }
+
+        function removeClass(className){
+            var ele = document.getElementsByClassName(className);
+            while(ele.length > 0){
+                ele[0].parentNode.removeChild(ele[0])
+            }
+        }
+
+        function setDerict(code){
+            switch(code){
+                case 37:
+                if(this.left){
+                    this.direct = "left";
+                    this.left = false;
+                    this.right = false;
+                    this.up = true;
+                    this.down = true;
+                }
+                break;
+                case 38:
+                if(this.up){
+                    this.direct = "up";
+                    this.left = true;
+                    this.right = true;
+                    this.up = false;
+                    this.down = false;
+                }
+                break;
+                case 39:
+                if(this.right){
+                    this.direct = "right";
+                    this.left = false;
+                    this.right = false;
+                    this.up = true;
+                    this.down = true;
+                }
+                break;
+                case 40:
+                if(this.down){
+                    this.direct = "down";
+                    this.left = true;
+                    this.right = true;
+                    this.up = false;
+                    this.down = false;
+                }
+                break;
+                default:
+                     break;
+            }
+        }
+
+        function bindEvent(){
+            
+            close.onclick = function (){
+                lose.style.display = "none"
+            }
+
+            startBtn.onclick = function(){
+                startAndPaush();
+            }
+            stop.onclick = function(){
+                startAndPaush();
+            }
+        }
+
+        function  startAndPaush(){
+            if(startPaushBool){
+                if(startGameBool){
+                    startGame(); 
+                    startGameBool = false;
+                }
+               stop.innerHTML="暂停"
+               document.onkeydown = function(e){
+                var code = e.keyCode
+                setDerict(code);
+            }
+                snakeMove = setInterval(function(){
+                 move()
+                },speed)
+            startPaushBool = false;
+            }else{
+                stop.innerHTML="开始"
+                clearInterval(snakeMove);
+                // document.onkeydown = function(e){
+                //     e.returnValue = false;
+                //     return false;
+                // }
+                  startPaushBool = true; 
+            }
+            
+        }
+    </script>
+</body>
+</html>
